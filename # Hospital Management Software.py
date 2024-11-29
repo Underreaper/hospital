@@ -19,8 +19,8 @@ def connect_to_database(password):
 
 def create_tables(cursor):
     """Creates necessary tables for the hospital management system."""
-    cursor.execute("CREATE DATABASE IF NOT EXISTS SP_hospitals")
-    cursor.execute("USE SP_hospitals")
+    cursor.execute("CREATE DATABASE IF NOT EXISTS hospitals")
+    cursor.execute("USE hospitals")
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS patient_details (
@@ -70,8 +70,8 @@ def create_tables(cursor):
 def register_user(cursor, connection):
     """Handles user registration."""
     print("REGISTER YOURSELF")
-    username = input("Enter your preferred username: ")
-    password = input("Enter your preferred password: ")
+    username = input("Enter your username: ")
+    password = input("Enter your password: ")
 
     try:
         cursor.execute("INSERT INTO user_data VALUES (%s, %s)", (username, password))
@@ -97,7 +97,7 @@ def login_user(cursor):
         return False
 
 
-def administration_menu():
+def administration_menu(cursor, connection):
     """Displays and handles administration tasks."""
     while True:
         print("""
@@ -107,19 +107,92 @@ def administration_menu():
 4. EXIT TO MAIN MENU
         """)
         choice = int(input("Enter your choice: "))
+        
         if choice == 1:
-            print("Showing Details... (To Be Implemented)")
+            print("""
+1. DOCTOR DETAILS
+2. NURSE DETAILS
+3. OTHER WORKER DETAILS
+            """)
+            sub_choice = int(input("Enter your choice: "))
+            if sub_choice == 1:
+                cursor.execute("SELECT * FROM doctor_details")
+                for row in cursor.fetchall():
+                    print(row)
+            elif sub_choice == 2:
+                cursor.execute("SELECT * FROM nurse_details")
+                for row in cursor.fetchall():
+                    print(row)
+            elif sub_choice == 3:
+                cursor.execute("SELECT * FROM other_workers_details")
+                for row in cursor.fetchall():
+                    print(row)
+            else:
+                print("Invalid choice.")
+        
         elif choice == 2:
-            print("Adding New Member... (To Be Implemented)")
+            print("""
+1. ADD DOCTOR
+2. ADD NURSE
+3. ADD OTHER WORKER
+            """)
+            sub_choice = int(input("Enter your choice: "))
+            name = input("Enter name: ")
+            age = int(input("Enter age: "))
+            address = input("Enter address: ")
+            contact = input("Enter contact: ")
+            monthly_salary = int(input("Enter monthly salary: "))
+            
+            if sub_choice == 1:
+                specialization = input("Enter specialization: ")
+                fees = int(input("Enter fees: "))
+                cursor.execute("""
+                    INSERT INTO doctor_details VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (name, specialization, age, address, contact, fees, monthly_salary))
+            elif sub_choice == 2:
+                cursor.execute("""
+                    INSERT INTO nurse_details VALUES (%s, %s, %s, %s, %s)
+                """, (name, age, address, contact, monthly_salary))
+            elif sub_choice == 3:
+                cursor.execute("""
+                    INSERT INTO other_workers_details VALUES (%s, %s, %s, %s, %s)
+                """, (name, age, address, contact, monthly_salary))
+            else:
+                print("Invalid choice.")
+                continue
+
+            connection.commit()
+            print("Member added successfully!")
+        
         elif choice == 3:
-            print("Deleting Member... (To Be Implemented)")
+            print("""
+1. DELETE DOCTOR
+2. DELETE NURSE
+3. DELETE OTHER WORKER
+            """)
+            sub_choice = int(input("Enter your choice: "))
+            name = input("Enter the name of the member to delete: ")
+            
+            if sub_choice == 1:
+                cursor.execute("DELETE FROM doctor_details WHERE name = %s", (name,))
+            elif sub_choice == 2:
+                cursor.execute("DELETE FROM nurse_details WHERE name = %s", (name,))
+            elif sub_choice == 3:
+                cursor.execute("DELETE FROM other_workers_details WHERE name = %s", (name,))
+            else:
+                print("Invalid choice.")
+                continue
+
+            connection.commit()
+            print("Member deleted successfully!")
+        
         elif choice == 4:
             break
         else:
             print("Invalid Choice. Try Again.")
 
 
-def patient_menu():
+def patient_menu(cursor, connection):
     """Displays and handles patient-related tasks."""
     while True:
         print("""
@@ -129,17 +202,34 @@ def patient_menu():
 4. EXIT TO MAIN MENU
         """)
         choice = int(input("Enter your choice: "))
+        
         if choice == 1:
-            print("Showing Patient Details... (To Be Implemented)")
+            cursor.execute("SELECT * FROM patient_details")
+            for row in cursor.fetchall():
+                print(row)
+        
         elif choice == 2:
-            print("Adding New Patient... (To Be Implemented)")
+            name = input("Enter patient name: ")
+            age = int(input("Enter patient age: "))
+            address = input("Enter patient address: ")
+            doctor_recommended = input("Enter doctor recommended: ")
+
+            cursor.execute("""
+                INSERT INTO patient_details VALUES (%s, %s, %s, %s)
+            """, (name, age, address, doctor_recommended))
+            connection.commit()
+            print("Patient added successfully!")
+        
         elif choice == 3:
-            print("Discharging Patient... (To Be Implemented)")
+            name = input("Enter patient name to discharge: ")
+            cursor.execute("DELETE FROM patient_details WHERE name = %s", (name,))
+            connection.commit()
+            print("Patient discharged successfully!")
+        
         elif choice == 4:
             break
         else:
             print("Invalid Choice. Try Again.")
-
 
 def main():
     """Main function for the hospital management system."""
@@ -177,9 +267,9 @@ WELCOME TO SP HOSPITALS PVT. LTD.
                     option = int(input("Enter your choice: "))
 
                     if option == 1:
-                        administration_menu()
+                        administration_menu(cursor, connection)
                     elif option == 2:
-                        patient_menu()
+                        patient_menu(cursor, connection)
                     elif option == 3:
                         print("Logged Out Successfully.")
                         break
