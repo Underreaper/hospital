@@ -235,7 +235,7 @@ def main():
     """Main function for the hospital management system."""
     print("""
 ====================================================
-WELCOME TO SP HOSPITALS PVT. LTD.
+WELCOME TO SURAJ HOSPITALS PVT. LTD.
 ====================================================
     """)
     password = input("Enter the database password: ")
